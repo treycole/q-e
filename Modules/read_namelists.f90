@@ -218,7 +218,7 @@ MODULE read_namelists_module
        Hubbard_parameters = '' ! obsolete
        Hubbard_U = 0.0_DP      ! moved to the HUBBARD card
        Hubbard_U_back = 0.0_DP ! replaced by Hubbard_U2 and moved to the HUBBARD card
-       Hubbard_V = 0.0_DP      ! moved to the HUBBARD card
+       ! Hubbard_V = 0.0_DP      ! moved to the HUBBARD card
        Hubbard_J0 = 0.0_DP     ! moved to the HUBBARD card
        Hubbard_J = 0.0_DP      ! moved to the HUBBARD card
        lda_plus_u = .FALSE.    ! automatically set in the HUBBARD card 
@@ -259,8 +259,8 @@ MODULE read_namelists_module
        zgate = 0.5
        relaxz = .false.
        block = .false.
-       block_1 = 0.45
-       block_2 = 0.55
+       block_1 = 0.45_DP
+       block_2 = 0.55_DP
        block_height = 0.0
        !
        !  ... postprocessing of DOS & phonons & el-ph
@@ -403,6 +403,9 @@ MODULE read_namelists_module
        mixing_fixed_ns = 0
        mixing_beta = -1.0_DP
        mixing_ndim = 8
+       simple_magn_mix = .FALSE.
+       maxlinmix = 7
+       simplemix = 1.5_DP
        diagonalization = 'david'
        diago_thr_init = 0.0_DP
        diago_cg_maxiter = 20
@@ -1006,7 +1009,6 @@ MODULE read_namelists_module
        CALL mp_bcast( Hubbard_U_back,         ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J0,             ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_J,              ionode_id, intra_image_comm )
-       CALL mp_bcast( Hubbard_V,              ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_alpha,          ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_alpha_back,     ionode_id, intra_image_comm )
        CALL mp_bcast( Hubbard_beta,           ionode_id, intra_image_comm )
@@ -1159,6 +1161,9 @@ MODULE read_namelists_module
        CALL mp_bcast( mixing_mode,          ionode_id, intra_image_comm )
        CALL mp_bcast( mixing_beta,          ionode_id, intra_image_comm )
        CALL mp_bcast( mixing_ndim,          ionode_id, intra_image_comm )
+       CALL mp_bcast( simple_magn_mix,      ionode_id, intra_image_comm )
+       CALL mp_bcast( maxlinmix,            ionode_id, intra_image_comm )
+       CALL mp_bcast( simplemix,            ionode_id, intra_image_comm )
        CALL mp_bcast( tqr,                  ionode_id, intra_image_comm )
        CALL mp_bcast( tq_smoothing,         ionode_id, intra_image_comm )
        CALL mp_bcast( tbeta_smoothing,      ionode_id, intra_image_comm )
@@ -1795,10 +1800,6 @@ MODULE read_namelists_module
        ENDIF
        IF (ANY(Hubbard_J(:,:)>eps24)) THEN
           WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_J is obsolete.")' )
-          allowed = .FALSE.
-       ENDIF
-       IF (ANY(Hubbard_V(:,:,:)>eps24)) THEN
-          WRITE( stdout, '(/5x,"WARNING!!! The input parameter Hubbard_V is obsolete.")' )
           allowed = .FALSE.
        ENDIF
        IF (ANY(backall(:))) THEN

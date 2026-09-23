@@ -50,6 +50,9 @@
                             lphase, omegamin, omegamax, omegastep, sigma_ref, &
                             mob_maxiter, use_ws, epmatkqread, selecqread,     &
                             scdm_proj, scdm_entanglement, scdm_mu, scdm_sigma,&
+                            proj, num_iter, bands_skipped, wdata, iprint,     &
+                            dis_win_min, dis_win_max, dis_froz_min,           &
+                            dis_froz_max, auto_projections,                   &
                             assume_metal, wannier_plot_scale, reduce_unk,     &
                             wannier_plot_supercell, wannier_plot_radius,      &
                             fixsym, epw_no_t_rev, epw_tr, epw_nosym,          &
@@ -96,7 +99,8 @@
                             ltrans_crta, sr_crta, prtvkk, prteigdiff,         &
                             plot_psir_plrn, lsign_psir_plrn,                  & 
                             eigen_solver_plrn, istate_relax_plrn,             & 
-                            eval_hplrn, eval_eplrn, prtuf
+                            eval_hplrn, eval_eplrn, prtuf, specfun_el_scgd0,  &
+                            opt_cond
   ! -------------------------------------------------------------------------------------
   !Added for calculating time-dependent Boltzmann transport Equation
   USE input,         ONLY : do_tdbe, dt_tdbe, nt_tdbe, twrite_tdbe,           &
@@ -136,6 +140,7 @@
   CALL mp_bcast(epwread         , meta_ionode_id, world_comm)
   CALL mp_bcast(epwwrite        , meta_ionode_id, world_comm)
   CALL mp_bcast(specfun_el      , meta_ionode_id, world_comm)
+  CALL mp_bcast(specfun_el_scgd0, meta_ionode_id, world_comm)
   CALL mp_bcast(specfun_ph      , meta_ionode_id, world_comm)
   CALL mp_bcast(specfun_pl      , meta_ionode_id, world_comm)
   CALL mp_bcast(wannierize      , meta_ionode_id, world_comm)
@@ -307,6 +312,7 @@
   CALL mp_bcast(fermi_energy  , meta_ionode_id, world_comm)
   CALL mp_bcast(gap_energy    , meta_ionode_id, world_comm)
   CALL mp_bcast(scissor       , meta_ionode_id, world_comm)
+  CALL mp_bcast(opt_cond      , meta_ionode_id, world_comm)
   CALL mp_bcast(ncarrier      , meta_ionode_id, world_comm)
   CALL mp_bcast(nel           , meta_ionode_id, world_comm)
   CALL mp_bcast(meff          , meta_ionode_id, world_comm)
@@ -453,6 +459,18 @@
   CALL mp_bcast(init_type_tdbe   , meta_ionode_id, world_comm)
   CALL mp_bcast(solver_tdbe      , meta_ionode_id, world_comm)
   CALL mp_bcast(ephmat_dir       , meta_ionode_id, world_comm)
+  ! Wannier90 setup: every rank queues its own copy of these options and has it
+  ! validated by w90_input_setopt, so they must hold the same values everywhere
+  CALL mp_bcast(proj             , meta_ionode_id, world_comm)
+  CALL mp_bcast(wdata            , meta_ionode_id, world_comm)
+  CALL mp_bcast(bands_skipped    , meta_ionode_id, world_comm)
+  CALL mp_bcast(auto_projections , meta_ionode_id, world_comm)
+  CALL mp_bcast(num_iter         , meta_ionode_id, world_comm)
+  CALL mp_bcast(iprint           , meta_ionode_id, world_comm)
+  CALL mp_bcast(dis_win_min      , meta_ionode_id, world_comm)
+  CALL mp_bcast(dis_win_max      , meta_ionode_id, world_comm)
+  CALL mp_bcast(dis_froz_min     , meta_ionode_id, world_comm)
+  CALL mp_bcast(dis_froz_max     , meta_ionode_id, world_comm)
   !
 #endif
   !

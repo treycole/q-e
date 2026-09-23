@@ -255,7 +255,7 @@ MODULE io_kcw
      !
      USE io_global, ONLY : ionode, ionode_id
      USE mp_images, ONLY : intra_image_comm
-     USE mp,        ONLY : mp_put, mp_sum, mp_rank, mp_size
+     USE mp,        ONLY : mp_sum, mp_rank, mp_size
 #if defined(__HDF5)
       USE  qeh5_base_module
 #endif
@@ -504,8 +504,11 @@ MODULE io_kcw
       nproc_in_group  = mp_size( intra_group_comm )
       ionode_in_group = ( me_in_group == root_in_group )
       ngm  = SIZE (rho)
-      IF (ngm /= SIZE (mill, 2) .OR. ngm /= SIZE (ig_l2g, 1) ) &
+      IF (ngm /= SIZE (mill, 2) .OR. ngm /= SIZE (ig_l2g, 1) ) THEN
+         print*,'ngm = ',ngm, 'mill = ',SIZE(mill, 2)
+         print*, 'mgm = ',ngm, 'ig_l2g= ',SIZE (ig_l2g, 1) 
          CALL errore('write_rhowann_g', 'inconsistent input dimensions', 1)
+      END IF   
       nspin= 1 !We use it to write one component at the time
 #if defined(__HDF5)
       IF ( nspin_mag<=2) THEN

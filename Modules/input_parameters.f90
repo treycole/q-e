@@ -29,7 +29,7 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nsx, natx, sc_size, nsolx
+  USE parameters, ONLY : nsx, sc_size, nsolx
   USE wannier_new,ONLY : wannier_data
   USE upf_params, ONLY : lqmax
   !
@@ -442,7 +442,7 @@ MODULE input_parameters
         REAL(DP) :: Hubbard_U2(nsx) = 0.0_DP
         REAL(DP) :: Hubbard_Um(lqmax,nspinx,nsx) = 0.0_DP
         REAL(DP) :: Hubbard_Um_nc(2*lqmax,nsx) = 0.0_DP
-        REAL(DP) :: Hubbard_V(natx,natx*(2*sc_size+1)**3,4) = 0.0_DP 
+        REAL(DP), ALLOCATABLE :: Hubbard_V(:,:,:)
         REAL(DP) :: Hubbard_J0(nsx) = 0.0_DP
         REAL(DP) :: Hubbard_J(3,nsx) = 0.0_DP
         REAL(DP) :: Hubbard_alpha(nsx) = 0.0_DP
@@ -521,9 +521,9 @@ MODULE input_parameters
         REAL(DP) :: zgate = 0.5
         LOGICAL  :: relaxz = .false.
         LOGICAL  :: block = .false.
-        REAL(DP) :: block_1 = 0.45
-        REAL(DP) :: block_2 = 0.55
-        REAL(DP) :: block_height = 0.1
+        REAL(DP) :: block_1 = 0.45_DP
+        REAL(DP) :: block_2 = 0.55_DP
+        REAL(DP) :: block_height = 0.1_DP
 
           ! Various parameters for noncollinear calculations
         LOGICAL  :: noncolin = .false.
@@ -915,6 +915,21 @@ MODULE input_parameters
         INTEGER :: mixing_ndim = 0
         !! dimension of mixing subspace. Used in PWscf only.
 
+        LOGICAL :: simple_magn_mix = .FALSE.
+        !! if .TRUE., mix the magnetization with plain mixing for the first
+        !! maxlinmix iterations instead of Broyden, independent of
+        !! mixing_mode (TF/local-TF preconditioning of the charge channel
+        !! keeps working as usual). Used in PWscf only.
+
+        INTEGER :: maxlinmix = 7
+        !! simple_magn_mix only: number of iterations for which the
+        !! magnetization is mixed with plain mixing instead of Broyden.
+        !! Used in PWscf only.
+
+        REAL(DP) :: simplemix = 1.5_DP
+        !! simple_magn_mix only: plain mixing coefficient for the
+        !! magnetization density. Used in PWscf only.
+
         CHARACTER(len=80) :: diagonalization = 'david'
         !! diagonalization = 'david', 'cg', 'paro' or 'rmm'
         !! algorithm used by PWscf for iterative diagonalization
@@ -1078,6 +1093,7 @@ MODULE input_parameters
           diis_temp, diis_achmix, diis_g0chmix, diis_g1chmix,          &
           diis_nchmix, diis_nrot, diis_rothr, diis_ethr, diis_chguess, &
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
+          simple_magn_mix, maxlinmix, simplemix,                       &
           tqr, tq_smoothing, tbeta_smoothing,                          &
           diago_cg_maxiter, diago_david_ndim, diago_rmm_ndim,          &
           diago_rmm_conv, diago_gs_nblock, diagonalization,            &
@@ -2039,6 +2055,8 @@ SUBROUTINE reset_input_checks()
     IF ( allocated( constr_inp ) )        DEALLOCATE( constr_inp )
     IF ( allocated( constr_target_inp ) ) DEALLOCATE( constr_target_inp )
     IF ( allocated( constr_target_set ) ) DEALLOCATE( constr_target_set )
+    !
+    IF ( allocated( Hubbard_V ) )         DEALLOCATE( Hubbard_V )
     !
     IF ( allocated( iprnks ) )       DEALLOCATE( iprnks )
     !

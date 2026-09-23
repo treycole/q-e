@@ -25,12 +25,12 @@ p1=`grep "P= " $fname | tail -1 | awk '{print $6}'`
 ### fi
 
 ## PP WANNIER
-nkp1=`grep "     1     8   " $fname | tail -1 | awk '{print $3}'`
-nkp2=`grep "     1     8   " $fname | tail -1 | awk '{print $4}'`
-nkp3=`grep "     1     8   " $fname | tail -1 | awk '{print $5}'`
+nkp1=`grep "     1       8   " $fname | tail -1 | awk '{print $3}'`
+nkp2=`grep "     1       8   " $fname | tail -1 | awk '{print $4}'`
+nkp3=`grep "     1       8   " $fname | tail -1 | awk '{print $5}'`
 
 ## PW2WANN 
-eig1=`head -1  $fname | awk '{print $3}'`
+eig1=`grep "        1         1"  $fname | awk '{print $3}'`
 
 ## WANNIER 
 omega=`grep "Omega Total" $fname | awk '{print $7}'`

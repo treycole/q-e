@@ -67,6 +67,7 @@ ep_coarse_unfolding.o \
 supercond_driver.o \
 selfen.o \
 spectral.o \
+scgd0_driver.o\
 wannier.o \
 use_wannier.o \
 init.o \
@@ -74,6 +75,13 @@ readin.o \
 setups.o \
 summaries.o \
 wann_common.o \
+polaron_common.o \
+utilities/polaron_grid.o \
+polaron_hamiltonian.o \
+polaron_diagonalization.o \
+io/io_polaron.o \
+polaron_interpolation.o \
+polaron_scf_driver.o \
 polaron.o \
 qdabs.o\
 wfpt.o \
@@ -92,7 +100,7 @@ onemkl_wrappers.f90 \
 #default : epw
 
 PHOBJS = ../../PHonon/PH/libph.a
-W90LIB = ../../wannier90/lib/libwannier.a
+W90LIB = ../../wannier90/lib/libwannier90.a
 LRMODS = ../../LR_Modules/liblrmod.a
 PWOBJS = ../../PW/src/libpw.a ../../KS_Solvers/libks_solvers.a ../../dft-d3/libdftd3qe.a
 QEMODS = $(BASEMODS)
@@ -136,5 +144,3 @@ clean :
 
 
 include make.depend
-
-

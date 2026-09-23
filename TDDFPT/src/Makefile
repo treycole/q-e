@@ -82,31 +82,31 @@ libtddfpt.a : $(LROBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-turbo_lanczos.x : lr_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
+turbo_lanczos.x : lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 		lr_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_davidson.x : lr_dav_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
+turbo_davidson.x : lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 		lr_dav_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_eels.x : lr_eels_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
+turbo_eels.x : lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
                 lr_eels_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_magnon.x : lr_magnons_main.o libtddfpt.a $(PWOBJS) $(QEMODS)
+turbo_magnon.x : lr_magnons_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 	        lr_magnons_main.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
 	- if [ -d ../bin ] ; then  ( cd ../bin ; ln -fs ../src/$@ . ); fi
 
-turbo_spectrum.x : turbo_spectrum.o libtddfpt.a $(PWOBJS) $(QEMODS)
+turbo_spectrum.x : turbo_spectrum.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS)
 	$(LD) $(LDFLAGS) -o $@ \
 		turbo_spectrum.o libtddfpt.a $(LRMODS) $(PWOBJS) $(QEMODS) $(QELIBS)
 	- ( cd ../../bin ; ln -fs ../TDDFPT/src/$@ . )
@@ -116,4 +116,11 @@ clean :
 	- /bin/rm -f ../bin/turbo_lanczos.x ../bin/turbo_davidson.x ../bin/turbo_eels.x \
 		../bin/turbo_magnons.x ../bin/turbo_spectrum.x *.x *.o *~ *.d *.mod *.i work.pc *.a *_tmp.f90
 
+ifneq ($(TOLERATE_MISSING_DEPEND),)
+-include make.depend
+else
+ifeq ($(wildcard make.depend),)
+$(error make.depend not found in $(CURDIR) -- run "make depend" first, or "make veryclean"/"make distclean" to clean without it)
+endif
 include make.depend
+endif

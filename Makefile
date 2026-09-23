@@ -13,21 +13,19 @@
 .PHONY: install
 
 default :
-	@echo 'to install Quantum ESPRESSO, type at the shell prompt:'
-	@echo '  ./configure [--prefix=]'
-	@echo '  make [-j] target'
+	@echo 'Usage: make [-j] target'
 	@echo ' '
 	@echo 'where target identifies one or multiple CORE PACKAGES:'
 	@echo '  pw           basic code for scf, structure optimization, MD'
+	@echo '  pp           postprocessing programs'
+	@echo '  neb          code for Nudged Elastic Band method'
 	@echo '  ph           phonon code, Gamma-only and third-order derivatives'
 	@echo '  hp           calculation of the Hubbard parameters from DFPT'
-	@echo '  pwcond       ballistic conductance'
-	@echo '  neb          code for Nudged Elastic Band method'
-	@echo '  pp           postprocessing programs'
-	@echo '  pwall        same as "make pw ph pp pwcond neb"'
+	@echo '  tddfpt       time dependent dft code'
+	@echo '  pwall        same as "make pw pp neb ph hp tddfpt"'
 	@echo '  cp           CP code: Car-Parrinello molecular dynamics'
 	@echo '  all_currents QEHeat code: energy flux and charge current'
-	@echo '  tddfpt       time dependent dft code'
+	@echo '  pwcond       ballistic conductance'
 	@echo '  gwl          GW with Lanczos chains'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  xspectra     X-ray core-hole spectroscopy calculations'
@@ -36,17 +34,17 @@ default :
 	@echo '               (compiles w90 as well)'
 	@echo '  kcw          KCW code: implementation of Koopmans functionals in primitive cell'
 	@echo '  pioud        Path Integral Molecular Dynamics with PIOUD algorithm'
-	@echo '  gui          Graphical User Interface'
-	@echo '  all          same as "make pwall cp ld1 tddfpt xspectra hp"'
+	@echo '  all          same as "make pwall cp ld1 xspectra pwcond"'
 	@echo ' '
-	@echo 'where target identifies one or multiple THIRD-PARTIES PACKAGES:'
+	@echo 'target may also identify one or multiple THIRD-PARTIES PACKAGES:'
 	@echo '  gipaw        NMR and EPR spectra'
 	@echo '  w90          Maximally localised Wannier Functions'
 	@echo '  want         Quantum Transport with Wannier functions'
 	@echo '  yambo        electronic excitations with plane waves'
 	@echo '  d3q          general third-order code and thermal transport codes'
 	@echo ' '
-	@echo 'where target is one of the following suite operation:'
+	@echo 'target may also be one of the following operations:'
+	@echo '  gui          build Graphical User Interface'
 	@echo '  doc          build documentation'
 	@echo '  links        create links to all executables in bin/'
 	@echo '  install      copy all executables to PREFIX/bin/'
@@ -93,7 +91,7 @@ tddfpt : lrmods
 	if test -d TDDFPT; then \
 	( cd TDDFPT; $(MAKE) all || exit 1) ; fi
 
-pp : pwlibs
+pp : pwlibs libw90
 	if test -d PP ; then \
 	( cd PP ; $(MAKE) all || exit 1 ) ; fi
 
@@ -132,7 +130,7 @@ epw: pw ph pp ld1 libw90
 	( cd EPW ; $(MAKE) all || exit 1; \
 		cd ../bin; ln -fs ../EPW/bin/epw.x . ); fi
 
-all_currents:
+all_currents: phlibs
 	if test -d QEHeat ; then \
 	( cd QEHeat ; $(MAKE) all || exit 1; ) ; fi
 
@@ -174,9 +172,9 @@ gui : bindir
 	   fi ; \
 	fi
 
-pwall : pw neb ph pp pwcond acfdt
+pwall : pw pp neb ph hp tddfpt acfdt
 
-all   : pwall cp ld1 tddfpt hp xspectra gwl kcw pioud
+all   : pwall cp ld1 pwcond xspectra gwl kcw pioud
 
 ###########################################################
 # Auxiliary targets used by main targets:
@@ -305,8 +303,8 @@ install :
 #########################################################
 
 # remove object files and executables
-clean : 
-	touch make.inc 
+clean :
+	touch make.inc
 	for dir in \
 		LAXlib FFTXlib XClib UtilXlib upflib Modules KS_Solvers \
 		dft-d3 LR_Modules PW CPV PP PHonon HP EPW NEB TDDFPT GWW \
@@ -315,7 +313,7 @@ clean :
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
-		$(MAKE) clean ) \
+		$(MAKE) clean TOLERATE_MISSING_DEPEND=$(TOLERATE_MISSING_DEPEND) ) \
 	    fi \
 	done
 	- @(cd install ; $(MAKE) -f plugins_makefile clean)
@@ -323,18 +321,28 @@ clean :
 	- /bin/rm -rf bin/*.x tempdir
 
 # remove files produced by "configure" as well
+# the submodule-checkout stamp files (git_devx, git_mbd, git_w90) are removed
+# unconditionally: they live under install/ in whichever tree make was run
+# from (TOPDIR for in-source, BUILDDIR for out-of-source), so this is safe
+# and meaningful in both cases, unlike the rest of this target.
+# TOLERATE_MISSING_DEPEND is a target-specific variable: it is in effect for
+# this recipe AND for the recipes of its prerequisites (clean, and anything
+# clean depends on), which is how it reaches the per-subdirectory "make
+# clean" calls above without weakening a plain "make clean".
+veryclean : TOLERATE_MISSING_DEPEND := 1
 veryclean : clean
+	- @(cd install ; $(MAKE) -f extlibs_makefile distclean_devx distclean_mbd distclean_w90)
 	-@if test ! $(TOPDIR) -ef $(BUILDDIR) ; then \
 	   echo "make $@ not supported in out-of-source builds" ; \
 	   echo "just re-create $(BUILDDIR) and re-run configure" ; \
 	else \
-	- @(cd install ; $(MAKE) -f plugins_makefile veryclean) ; \
-	- (cd install ; rm -rf config.log configure.msg config.status \
+	   (cd install ; $(MAKE) -f plugins_makefile veryclean) ; \
+	   (cd install ; rm -rf config.log configure.msg config.status \
 		make_wannier90.inc autom4te.cache ) ; \
-	- rm -f espresso.tar.gz ; \
-	- rm -rf make.inc ; \
-	- rm -rf MBD wannier90 devxlib ;\
-	- rm -rf FoX lapack ; \
+	   rm -f espresso.tar.gz ; \
+	   rm -rf make.inc ; \
+	   rm -rf MBD wannier90 devxlib ; \
+	   rm -rf FoX lapack ; \
 	fi
 # remove everything not in the original distribution
 # place deinit at the very end such that makefiles clean up as much as possible.
